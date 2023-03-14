@@ -2,6 +2,7 @@
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use log::debug;
 use core::arch::asm;
 use core::mem::size_of;
 
@@ -10,8 +11,6 @@ use x86_64::registers::model_specific::{GsBase, Star};
 use x86_64::structures::gdt::{Descriptor, SegmentSelector};
 use x86_64::structures::DescriptorTablePointer;
 use x86_64::{PrivilegeLevel, VirtAddr};
-
-use log::debug;
 
 #[cfg(not(feature = "ioport_bitmap"))]
 type TSS = x86_64::structures::tss::TaskStateSegment;
@@ -38,9 +37,8 @@ pub fn init() {
     unsafe {
         // get current GDT
         let gdtp = sgdt();
-        let entry_count = (gdtp.limit + 1) as usize / size_of::<u64>();
-        debug!("gdtp:{:?}",gdtp);
-        let old_gdt = core::slice::from_raw_parts(gdtp.base.as_ptr::<u64>(), entry_count);
+        let entry_count = (gdtp.limit + 1) as usize / size_of::<u64>() ;
+        let old_gdt = &*core::ptr::slice_from_raw_parts(gdtp.base.as_ptr::<u8>(), entry_count*size_of::<u64>());
 
         // allocate new GDT with 7 more entries
         //
@@ -48,12 +46,24 @@ pub fn init() {
         //   STAR[47:32] = K_CS   = K_SS - 8
         //   STAR[63:48] = U_CS32 = U_SS32 - 8 = U_CS - 16
         let mut gdt = Vec::from(old_gdt);
-        gdt.extend([tss0, tss1, KCODE64, KDATA64, UCODE32, UDATA32, UCODE64].iter());
-        let gdt = Vec::leak(gdt);
+        let bytes = {
+            let mut bytes_collecter = Vec::new();
+            bytes_collecter.extend(tss0.to_le_bytes());
+            bytes_collecter.extend(tss1.to_le_bytes());
+            bytes_collecter.extend(KCODE64.to_le_bytes());
+            bytes_collecter.extend(KDATA64.to_le_bytes());
+            bytes_collecter.extend(UCODE32.to_le_bytes());
+            bytes_collecter.extend(UDATA32.to_le_bytes());
+            bytes_collecter.extend(UCODE64.to_le_bytes());
+            bytes_collecter
+        };
 
+        gdt.extend(bytes);
+        let gdt = Vec::leak(gdt);
+        debug!("new gdt:{:x?}, entry_count:{}",gdt,gdt.len()/size_of::<u64>());
         // load new GDT and TSS
         lgdt(&DescriptorTablePointer {
-            limit: gdt.len() as u16 * 8 - 1,
+            limit: gdt.len() as u16 - 1,
             base: VirtAddr::new(gdt.as_ptr() as _),
         });
         load_tss(SegmentSelector::new(
