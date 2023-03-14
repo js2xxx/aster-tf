@@ -37,10 +37,16 @@ pub use trap::TrapFrame;
 ///
 #[cfg(any(target_os = "none", target_os = "uefi"))]
 pub unsafe fn init() {
+    use log::info;
+    info!("Initialing trapframe...");
+
     x86_64::instructions::interrupts::disable();
     gdt::init();
+    info!("GDT initialization completed");
     idt::init();
+    info!("IDT initialization completed");
     syscall::init();
+    info!("syscall related register initialization completed");
 }
 
 /// User space context

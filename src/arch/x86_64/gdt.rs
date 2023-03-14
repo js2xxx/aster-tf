@@ -11,6 +11,8 @@ use x86_64::structures::gdt::{Descriptor, SegmentSelector};
 use x86_64::structures::DescriptorTablePointer;
 use x86_64::{PrivilegeLevel, VirtAddr};
 
+use log::debug;
+
 #[cfg(not(feature = "ioport_bitmap"))]
 type TSS = x86_64::structures::tss::TaskStateSegment;
 #[cfg(feature = "ioport_bitmap")]
@@ -37,6 +39,7 @@ pub fn init() {
         // get current GDT
         let gdtp = sgdt();
         let entry_count = (gdtp.limit + 1) as usize / size_of::<u64>();
+        debug!("gdtp:{:?}",gdtp);
         let old_gdt = core::slice::from_raw_parts(gdtp.base.as_ptr::<u64>(), entry_count);
 
         // allocate new GDT with 7 more entries
