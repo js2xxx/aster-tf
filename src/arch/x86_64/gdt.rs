@@ -2,9 +2,9 @@
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use log::debug;
 use core::arch::asm;
 use core::mem::size_of;
+use log::debug;
 
 use x86_64::instructions::tables::{lgdt, load_tss};
 use x86_64::registers::model_specific::{GsBase, Star};
@@ -37,8 +37,11 @@ pub fn init() {
     unsafe {
         // get current GDT
         let gdtp = sgdt();
-        let entry_count = (gdtp.limit + 1) as usize / size_of::<u64>() ;
-        let old_gdt = &*core::ptr::slice_from_raw_parts(gdtp.base.as_ptr::<u8>(), entry_count*size_of::<u64>());
+        let entry_count = (gdtp.limit + 1) as usize / size_of::<u64>();
+        let old_gdt = &*core::ptr::slice_from_raw_parts(
+            gdtp.base.as_ptr::<u8>(),
+            entry_count * size_of::<u64>(),
+        );
 
         // allocate new GDT with 7 more entries
         //
@@ -60,7 +63,11 @@ pub fn init() {
 
         gdt.extend(bytes);
         let gdt = Vec::leak(gdt);
-        debug!("new gdt:{:x?}, entry_count:{}",gdt,gdt.len()/size_of::<u64>());
+        debug!(
+            "new gdt:{:x?}, entry_count:{}",
+            gdt,
+            gdt.len() / size_of::<u64>()
+        );
         // load new GDT and TSS
         lgdt(&DescriptorTablePointer {
             limit: gdt.len() as u16 - 1,

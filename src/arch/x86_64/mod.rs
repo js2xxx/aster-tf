@@ -84,6 +84,9 @@ pub struct GeneralRegs {
     pub gsbase: usize,
 }
 
+unsafe impl pod::Pod for GeneralRegs {}
+unsafe impl pod::Pod for UserContext {}
+
 impl UserContext {
     /// Get number of syscall
     pub fn get_syscall_num(&self) -> usize {
