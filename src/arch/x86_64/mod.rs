@@ -1,20 +1,10 @@
-#[cfg(any(target_os = "linux", target_os = "macos"))]
-mod fncall;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 mod gdt;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 mod idt;
 #[cfg(feature = "ioport_bitmap")]
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 pub mod ioport;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 mod syscall;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 mod trap;
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
-pub use fncall::syscall_fn_entry;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 pub use trap::TrapFrame;
 
 /// Initialize interrupt handling on x86_64.
@@ -35,7 +25,6 @@ pub use trap::TrapFrame;
 /// [TSS]: https://wiki.osdev.org/Task_State_Segment
 /// [`syscall`]: https://www.felixcloutier.com/x86/syscall
 ///
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 pub unsafe fn init() {
     use log::info;
     info!("Initializing trapframe...");

@@ -13,8 +13,10 @@ use x86_64::structures::DescriptorTablePointer;
 use x86_64::{PrivilegeLevel, VirtAddr};
 
 #[cfg(not(feature = "ioport_bitmap"))]
+#[allow(clippy::upper_case_acronyms)]
 type TSS = x86_64::structures::tss::TaskStateSegment;
 #[cfg(feature = "ioport_bitmap")]
+#[allow(clippy::upper_case_acronyms)]
 type TSS = super::ioport::TSSWithPortBitmap;
 
 /// Init TSS & GDT.

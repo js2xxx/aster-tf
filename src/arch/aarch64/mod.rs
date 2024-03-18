@@ -1,11 +1,5 @@
-#[cfg(target_os = "linux")]
-mod fncall;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 mod trap;
 
-#[cfg(target_os = "linux")]
-pub use fncall::*;
-#[cfg(any(target_os = "none", target_os = "uefi"))]
 pub use trap::*;
 
 /// Saved registers on a trap.
